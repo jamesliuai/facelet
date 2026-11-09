@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as C from '../src/lib/cube/cubie';
 import { cubieFromAlg } from '../src/lib/cube/nxn';
 import { PLL, OLL, OLL2, PLL2, OLL_EDGES } from '../src/lib/trainer/data/known';
-import generated from '../src/lib/trainer/data/generated.json';
+import { SETS, algSolves, setById, withPreAuf } from '../src/lib/trainer/sets';
 
 const U = (k: number) => C.applyMoves(C.solved(), Array(((k % 4) + 4) % 4).fill(0));
 
@@ -98,70 +98,78 @@ describe('2-look sets', () => {
   });
 });
 
-describe('generated sets', () => {
-  const sets = generated as Record<string, { name: string; algs: string[] }[]>;
+describe('community sets', () => {
+  const f2l = setById('f2l');
+  const coll = setById('coll');
+  const cmll = setById('cmll');
+  const zbls = setById('zbls');
+  const zbll = setById('zbll');
   it('F2L algorithms keep the cross and other slots', () => {
-    for (const c of sets.f2l) for (const a of c.algs) {
+    for (const c of f2l.cases) for (const a of c.algs) {
       const x = caseOf(a);
       expect([5, 6, 7].every((i) => x.cp[i] === i && x.co[i] === 0), `${c.name}: ${a}`).toBe(true);
       expect([4, 5, 6, 7, 9, 10, 11].every((i) => x.ep[i] === i && x.eo[i] === 0), `${c.name}: ${a}`).toBe(true);
     }
-    expect(sets.f2l.length).toBe(41);
+    expect(f2l.cases.length).toBe(41);
   });
   it('COLL keeps F2L and EO; CMLL keeps F2B', () => {
-    for (const c of sets.coll) for (const a of c.algs) {
+    for (const c of coll.cases) for (const a of c.algs) {
       const x = caseOf(a);
       expect(f2lSolved(x), `${c.name}: ${a}`).toBe(true);
       expect(x.eo.every((v) => v === 0), `${c.name} EO`).toBe(true);
     }
-    for (const c of sets.cmll) for (const a of c.algs) {
+    for (const c of cmll.cases) for (const a of c.algs) {
       const x = caseOf(a);
       expect([4, 5, 6, 7].every((i) => x.cp[i] === i && x.co[i] === 0), `${c.name}: ${a}`).toBe(true);
       expect([4, 6, 8, 9, 10, 11].every((i) => x.ep[i] === i && x.eo[i] === 0), `${c.name}: ${a}`).toBe(true);
     }
-    expect(sets.coll.length).toBe(42);
-    expect(sets.cmll.length).toBe(42);
+    expect(coll.cases.length).toBe(42);
+    expect(cmll.cases.length).toBe(42);
   });
   it('ZBLS algorithms keep F2L and orient every edge', () => {
-    for (const c of sets.zbls) for (const a of c.algs) {
+    for (const c of zbls.cases) for (const a of c.algs) {
       const x = caseOf(a);
       expect([5, 6, 7].every((i) => x.cp[i] === i && x.co[i] === 0), `${c.name}: ${a}`).toBe(true);
       expect([4, 5, 6, 7, 9, 10, 11].every((i) => x.ep[i] === i && x.eo[i] === 0), `${c.name}: ${a}`).toBe(true);
-      // applying the alg to its case leaves all edges oriented
-      const after = C.multiply(x, C.applyMoves(C.solved(), C.parseMoves(a)));
-      expect(after.eo.every((v) => v === 0), c.name).toBe(true);
+      expect(algSolves(zbls, c.state, a), `${c.name}: ${a}`).toBe(true);
     }
-    expect(sets.zbls.length).toBeGreaterThan(300);
+    expect(zbls.cases.length).toBe(305);
   });
   it('ZBLL algorithms solve oriented-edge last layers', () => {
-    if (!sets.zbll) return;
     const keys = new Set<string>();
-    for (const c of sets.zbll) {
-      const x = caseOf(c.algs[0]);
+    for (const c of zbll.cases) {
+      const x = c.state;
       expect(f2lSolved(x), c.name).toBe(true);
       expect(x.eo.every((v) => v === 0), c.name).toBe(true);
       keys.add(fullKey(x));
     }
-    expect(keys.size).toBe(sets.zbll.length);
+    expect(keys.size).toBe(472);
+    expect(zbll.cases.length).toBe(472);
+  });
+  it('every shipped community algorithm is credited and solves the diagram as written', () => {
+    for (const set of [f2l, coll, cmll, zbls, zbll]) for (const c of set.cases) {
+      expect(c.algs.length, c.id).toBeGreaterThan(0);
+      for (const a of c.algs) {
+        expect(c.sources?.[a], `${c.id}: ${a}`).toMatchObject({ name: expect.any(String), url: expect.stringMatching(/^https:\/\//) });
+        expect(algSolves(set, c.state, a), `${c.id}: ${a}`).toBe(true);
+      }
+    }
   });
 });
 
 describe('alternatives and diagrams', () => {
-  it('every alternative solves its case once the right U turn is in front', async () => {
-    const { SETS, caseState, withPreAuf } = await import('../src/lib/trainer/sets');
+  it('every alternative solves its case once the right U turn is in front', () => {
     for (const set of SETS) {
       for (const c of set.cases) {
-        const st = caseState(c.algs[0]);
-        for (const a of c.algs) expect(withPreAuf(set, st, a), `${set.id} ${c.name}: ${a}`).not.toBeNull();
+        for (const a of c.algs) expect(withPreAuf(set, c.state, a), `${set.id} ${c.name}: ${a}`).not.toBeNull();
       }
     }
   });
   it('PLL arrows show the textbook permutation', async () => {
-    const { SETS, caseState } = await import('../src/lib/trainer/sets');
     const { arrowPermutation } = await import('../src/lib/render/case-svg');
     const want: Record<string, string> = { Aa: '3/0', Ab: '3/0', E: '4/0', H: '0/4', Ua: '0/3', Ub: '0/3', Z: '0/4', Ga: '3/3', Gb: '3/3', Gc: '3/3', Gd: '3/3' };
     for (const c of SETS.find((s) => s.id === 'pll')!.cases) {
-      const y = arrowPermutation(caseState(c.algs[0]));
+      const y = arrowPermutation(c.state);
       let mc = 0;
       let me = 0;
       for (let p = 0; p < 4; p++) {

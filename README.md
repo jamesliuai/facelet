@@ -33,7 +33,7 @@ See how a session is changing, beyond the latest single. Rolling averages sit al
 
 ### Algorithm trainer
 
-Choose the cases you want to work on, inspect their diagrams, and train from randomized setups. Learning status and per-case times help you decide what to practice next.
+Open a case and choose **Learn in 3D** to step through its algorithm or try an alternative. When you’re ready, practice that case from a fresh scramble. Learning status and per-case times help you decide what to work on next.
 
 ![Facelet algorithm trainer with case diagrams and practice controls](output/playwright/trainer.png)
 
@@ -72,7 +72,7 @@ Open the local URL printed by Vite, usually `http://localhost:5173`.
 | `npm run build` | Build the static site into `dist/` |
 | `npm run preview` | Preview the production build locally |
 | `npm run verify:algs` | Verify the trainer algorithms |
-| `npm run gen:algs` | Regenerate the algorithm dataset |
+| `npm run import:algs -- <path to alg_list.js>` | Refresh the community algorithms from the credited source |
 
 To host your own copy, run `npm run build` and deploy `dist/` to a static host over HTTPS. Relative asset paths and hash-based navigation support hosting under a subdirectory. The production build includes a service worker for offline use after the app has been loaded.
 
@@ -109,3 +109,5 @@ Bluetooth smart cubes, hardware timers, and microphone-based Stackmat input are 
 ## Credits
 
 Facelet uses Svelte and Vite, with Geist and Geist Mono by Vercel and Instrument Serif by the Instrument Serif project. The bundled fonts include their [SIL Open Font License notices](src/assets/fonts/).
+
+The F2L, COLL, CMLL, ZBLL, and ZBLS algorithms are sourced from [Tao Yu’s Alg Trainer](https://github.com/tao-yu/Alg-Trainer/blob/cb95945c3e4839ee1e4b058d4a79bc022615b220/js/alg_list.js) ([MIT license](public/licenses/tao-yu-alg-trainer.txt)). The case dialog links to the source of each sequence, including ZBLL collections by Juliette Sébastien and by Jabari Nuruddin, Justin Taylor, and Tao Yu, and the ZBLS collection by Chad Batten and Tao Yu. Facelet matches sequences by cube state and adjusts the starting turn or viewing angle where needed. To refresh the library, pass the pinned `alg_list.js` file to `npm run import:algs` and run `npm run verify:algs`.

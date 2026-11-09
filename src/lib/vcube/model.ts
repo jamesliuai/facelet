@@ -113,30 +113,36 @@ export class CubeModel {
     return true;
   }
 
+  /** Start from sticker colours in the same order as StickerCube. */
+  setFacelets(facelets: Uint8Array) {
+    if (facelets.length !== 6 * this.n * this.n) throw new Error('Facelet count does not match cube size');
+    this.reset();
+    for (const c of this.cubies) {
+      for (const s of c.stickers) s.face = facelets[this.faceletIndex(c.pos, s.face)];
+    }
+  }
+
   /** Sticker colours in StickerCube order (U R F D L B, row-major net), for previews. */
   facelets(): Uint8Array {
-    const n = this.n;
-    const out = new Uint8Array(6 * n * n);
+    const out = new Uint8Array(6 * this.n * this.n);
     for (const c of this.cubies) {
       for (const s of c.stickers) {
-        const w = m3v(c.rot, s.n);
-        const f = faceOfNormal(w);
-        const [x, y, z] = c.pos;
-        // doubled cubie coords → net (row, col), matching nxn.ts stickerIndex
-        let r = 0;
-        let col = 0;
-        switch (f) {
-          case 0: col = (x + n - 1) / 2; r = (z + n - 1) / 2; break;
-          case 1: col = (n - 1 - z) / 2; r = (n - 1 - y) / 2; break;
-          case 2: col = (x + n - 1) / 2; r = (n - 1 - y) / 2; break;
-          case 3: col = (x + n - 1) / 2; r = (n - 1 - z) / 2; break;
-          case 4: col = (z + n - 1) / 2; r = (n - 1 - y) / 2; break;
-          case 5: col = (n - 1 - x) / 2; r = (n - 1 - y) / 2; break;
-        }
-        out[f * n * n + r * n + col] = s.face;
+        const f = faceOfNormal(m3v(c.rot, s.n));
+        out[this.faceletIndex(c.pos, f)] = s.face;
       }
     }
     return out;
+  }
+
+  private faceletIndex([x, y, z]: Cubie['pos'], f: number): number {
+    const n = this.n;
+    // Doubled cubie coordinates to net row and column, matching nxn.ts.
+    const row = f === 0 ? z : f === 3 ? -z : -y;
+    let col = x;
+    if (f === 1) col = -z;
+    else if (f === 4) col = z;
+    else if (f === 5) col = -x;
+    return f * n * n + ((row + n - 1) / 2) * n + (col + n - 1) / 2;
   }
 }
 

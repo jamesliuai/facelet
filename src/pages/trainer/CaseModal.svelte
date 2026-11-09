@@ -2,17 +2,26 @@
   import Modal from '../../components/Modal.svelte';
   import Segmented from '../../components/Segmented.svelte';
   import Icon from '../../components/Icon.svelte';
+  import LearnView from './LearnView.svelte';
   import { trainer, type Status } from '../../lib/trainer/trainer.svelte';
-  import { untrack } from 'svelte';
-  import { caseState, algSolves, withPreAuf, type TCase, type TSet } from '../../lib/trainer/sets';
+  import { tick, untrack } from 'svelte';
+  import { algSolves, withPreAuf, type TCase, type TSet } from '../../lib/trainer/sets';
   import { caseSvg, faceColors } from '../../lib/render/case-svg';
   import { settings } from '../../lib/store/settings.svelte';
   import { formatTime } from '../../lib/stats/format';
   import { copyText } from '../../lib/commands';
   import { countMoves, isValidAlg } from '../../lib/cube/alg';
+  import { toFacelets } from '../../lib/cube/cubie';
 
-  let { open = $bindable(false), set, c }: { open?: boolean; set: TSet; c: TCase | null } = $props();
+  let { open = $bindable(false), set, c, onpractice }: {
+    open?: boolean;
+    set: TSet;
+    c: TCase | null;
+    onpractice?: (c: TCase, alg: string) => void;
+  } = $props();
 
+  let learning = $state(false);
+  let learnButton = $state<HTMLButtonElement>();
   let custom = $state('');
   let error = $state('');
   let status = $state<Status>('new');
@@ -22,6 +31,7 @@
     if (open && c) {
       const id = c.id;
       untrack(() => {
+        learning = false;
         custom = '';
         error = '';
         note = '';
@@ -31,7 +41,7 @@
   });
 
   const colors = $derived(faceColors(settings.cubeColors, settings.trainerYellowTop));
-  const cstate = $derived(c ? caseState(c.algs[0]) : null);
+  const cstate = $derived(c?.state ?? null);
   const svg = $derived(cstate ? caseSvg(cstate, set.view, colors, set.view === 'll-pll') : '');
   const main = $derived(c ? trainer.mainAlg(c) : '');
   const times = $derived(c ? trainer.timesOf(c.id).slice().reverse() : []);
@@ -58,6 +68,11 @@
     if (full !== c.algs[0] && !algSolves(set, cstate, full)) return;
     trainer.setCustom(c.id, full === c.algs[0] ? null : full);
   }
+  async function returnToDetails() {
+    learning = false;
+    await tick();
+    learnButton?.focus();
+  }
   function saveCustom() {
     if (!c || !cstate) return;
     const a = custom.trim();
@@ -80,8 +95,18 @@
   }
 </script>
 
-<Modal bind:open title={c?.name ?? ''} subtitle={c ? `${set.name} · ${c.group}` : ''} width={620}>
-  {#if c}
+<Modal bind:open title={c ? (learning ? `Learn ${c.name}` : c.name) : ''} subtitle={c ? `${set.name} · ${c.group}` : ''} width={learning ? 860 : 620}>
+  {#if open && c && learning && onpractice}
+    {#key c.id}
+      <LearnView
+        start={Uint8Array.from(toFacelets(c.state))}
+        {colors}
+        algorithms={alts.map(({ full }) => ({ full, source: c?.sources?.[full] }))}
+        onback={returnToDetails}
+        onpractice={(alg) => onpractice?.(c!, alg)}
+      />
+    {/key}
+  {:else if c}
     <div class="top">
       <div class="img">{@html svg}</div>
       <div class="side">
@@ -92,14 +117,23 @@
           <div><span>best</span><b>{formatTime(trainer.best(c.id), 2)}</b></div>
           <div><span>mean (12)</span><b>{formatTime(trainer.mean(c.id), 2)}</b></div>
         </div>
+        {#if onpractice}
+          <button class="btn primary learn" bind:this={learnButton} onclick={() => learning = true}><Icon name="cube" size={16} />Learn in 3D</button>
+        {/if}
       </div>
     </div>
 
     <span class="label">Algorithms</span>
     <ul class="algs">
       {#each alts as a (a.full)}
+        {@const source = c.sources?.[a.full]}
         <li class:main={a.full === main}>
-          <span class="mono">{#if a.auf}<span class="auf" title="Turn U first from the drawn angle">({a.auf})</span>{' '}{/if}{a.alg}</span>
+          <div class="alg-text">
+            <span class="mono">{#if a.auf}<span class="auf" title="Turn U first from the drawn angle">({a.auf})</span>{' '}{/if}{a.alg}</span>
+            {#if source}
+              <a class="source" href={source.url} target="_blank" rel="noopener noreferrer">{source.name}</a>
+            {/if}
+          </div>
           <span class="len num">{countMoves(a.alg).htm}</span>
           <button class="icon-btn sm" onclick={() => copyText(a.full, 'Algorithm copied')} aria-label="Copy"><Icon name="copy" size={13} /></button>
           {#if a.full !== main}
@@ -167,6 +201,10 @@
     font-weight: 500;
     font-size: 16px;
   }
+  .learn {
+    align-self: flex-start;
+    margin-top: 6px;
+  }
   .algs {
     list-style: none;
     padding: 0;
@@ -185,9 +223,20 @@
   .algs li:last-child {
     border-bottom: 0;
   }
-  .algs li .mono {
-    flex: 1;
+  .alg-text {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .alg-text .mono {
     user-select: text;
+  }
+  .source {
+    display: block;
+    width: fit-content;
+    margin-top: 4px;
+    color: var(--fg-2);
+    font-size: 12px;
+    text-decoration: underline;
   }
   .algs li.main .mono {
     font-weight: 500;

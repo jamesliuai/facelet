@@ -3,7 +3,7 @@
   import Icon from '../../components/Icon.svelte';
   import { TimerEngine, type Phase } from '../../lib/timer/engine';
   import { trainer, type Mode } from '../../lib/trainer/trainer.svelte';
-  import { caseState, fillerFor, type TCase, type TSet } from '../../lib/trainer/sets';
+  import { fillerFor, type TCase, type TSet } from '../../lib/trainer/sets';
   import { caseSvg, faceColors } from '../../lib/render/case-svg';
   import { settings } from '../../lib/store/settings.svelte';
   import { ui, typingInField } from '../../lib/store/ui.svelte';
@@ -13,7 +13,14 @@
   import type { Filler } from '../../lib/trainer/setup';
   import { haptic } from '../../lib/device';
 
-  let { set, cases, mode, onexit, onopen }: { set: TSet; cases: TCase[]; mode: Mode; onexit: () => void; onopen: (c: TCase) => void } = $props();
+  let { set, cases, mode, practiceAlg, onexit, onopen }: {
+    set: TSet;
+    cases: TCase[];
+    mode: Mode;
+    practiceAlg?: string;
+    onexit: () => void;
+    onopen: (c: TCase) => void;
+  } = $props();
 
   type Item = { c: TCase; scramble: string };
   let current = $state<Item | null>(null);
@@ -93,7 +100,7 @@
   }
 
   async function make(c: TCase): Promise<Item> {
-    const state = caseState(c.algs[0]);
+    const state = $state.snapshot(c.state);
     const scramble = await call<string>('case', { state, options: { filler: fillerOf(c), preAuf: true } });
     return { c, scramble };
   }
@@ -247,7 +254,7 @@
   <div class="bar">
     <button class="btn sm ghost" onclick={onexit}><Icon name="left" size={15} />Cases</button>
     <span class="chip">{set.name}</span>
-    <span class="chip">{mode === 'recap' ? `Recap · ${Math.max(0, recapLeft)} left` : mode === 'weighted' ? 'Weighted' : 'Random'}</span>
+    <span class="chip">{practiceAlg ? cases[0].name : mode === 'recap' ? `Recap · ${Math.max(0, recapLeft)} left` : mode === 'weighted' ? 'Weighted' : 'Random'}</span>
     <span class="grow"></span>
     <span class="muted num">{results.length} solves · mean {formatTime(mean, 2)}</span>
   </div>
@@ -259,7 +266,7 @@
       <div class="sum">
         {#each summary as s}
           <button class="srow" onclick={() => onopen(s.c)}>
-            <span class="mini">{@html caseSvg(caseState(s.c.algs[0]), set.view, colors, false)}</span>
+            <span class="mini">{@html caseSvg(s.c.state, set.view, colors, false)}</span>
             <span>{s.c.name}</span>
             <span class="num">{formatTime(s.t, 2)}</span>
           </button>
@@ -283,10 +290,10 @@
     <div class="holdbar" aria-hidden="true"><div class="bar" class:full={phase === 'ready'} style="transform: scaleX({holdPct}); opacity: {holdPct > 0 ? 1 : 0}"></div></div>
     <div class="reveal" class:show={revealed || showAlg}>
       {#if current && (revealed || showAlg)}
-        <button class="img" onclick={() => onopen(current!.c)} aria-label="Case details">{@html caseSvg(caseState(current.c.algs[0]), set.view, colors, set.view === 'll-pll')}</button>
+        <button class="img" onclick={() => onopen(current!.c)} aria-label="Case details">{@html caseSvg(current.c.state, set.view, colors, set.view === 'll-pll')}</button>
         <div class="txt">
           <div class="name">{current.c.name} <span class="muted">· {current.c.group}</span></div>
-          {#if showAlg}<div class="alg mono">{trainer.mainAlg(current.c)}</div>{/if}
+          {#if showAlg}<div class="alg mono">{practiceAlg ?? trainer.mainAlg(current.c)}</div>{/if}
           {#if revealed}
             <div class="acts">
               <button class="btn sm" class:primary={trainer.status(current.c.id) === 'learning'} onclick={() => trainer.setStatus(current!.c.id, trainer.status(current!.c.id) === 'learning' ? 'new' : 'learning')}>Learning</button>

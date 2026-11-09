@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "test": "vitest run",
-    "gen:algs": "tsx scripts/gen-algs.ts",
+    "import:algs": "node --import tsx scripts/import-algs.ts",
     "verify:algs": "vitest run tests/algs.test.ts"
   },
   "devDependencies": {

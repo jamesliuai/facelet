@@ -6,7 +6,7 @@
   import CaseModal from './trainer/CaseModal.svelte';
   import TrainView from './trainer/TrainView.svelte';
   import RecognizeView from './trainer/RecognizeView.svelte';
-  import { SETS, setById, caseState, type TCase, type SetId } from '../lib/trainer/sets';
+  import { SETS, setById, type TCase, type SetId } from '../lib/trainer/sets';
   import { trainer, type Mode } from '../lib/trainer/trainer.svelte';
   import { caseSvg, faceColors } from '../lib/render/case-svg';
   import { settings } from '../lib/store/settings.svelte';
@@ -14,6 +14,7 @@
   import { formatTime } from '../lib/stats/format';
 
   let view = $state<'cases' | 'train' | 'recognize'>('cases');
+  let focusedPractice = $state.raw<{ c: TCase; alg: string } | null>(null);
   let openCase = $state<TCase | null>(null);
   let modalOpen = $state(false);
   let filter = $state<'all' | 'new' | 'learning' | 'learned'>('all');
@@ -48,7 +49,7 @@
     trainer.data.set = id;
     trainer.save();
     collapsed = {};
-    view = 'cases';
+    exitPractice();
   }
   // Acts on the cases you can see: with a status filter on, hidden cases are left alone.
   function toggleGroup(cases: TCase[]) {
@@ -67,6 +68,7 @@
     trainer.setSelected(set.id, ids);
   }
   function start(mode: Mode) {
+    focusedPractice = null;
     trainer.data.mode = mode;
     trainer.save();
     view = mode === 'recognize' ? 'recognize' : 'train';
@@ -74,6 +76,15 @@
   function show(c: TCase) {
     openCase = c;
     modalOpen = true;
+  }
+  function practiceCase(c: TCase, alg: string) {
+    modalOpen = false;
+    focusedPractice = { c, alg };
+    view = 'train';
+  }
+  function exitPractice() {
+    focusedPractice = null;
+    view = 'cases';
   }
   const isCollapsed = (g: string, i: number) => collapsed[g] ?? (big && i > 0);
 
@@ -87,7 +98,7 @@
     {#if view === 'cases'}
       <span class="eyebrow">{SETS.length} sets · {SETS.reduce((a, x) => a + x.cases.length, 0).toLocaleString()} verified cases</span>
       <h1 class="page-title">Algorithm trainer</h1>
-      <p class="page-sub">Pick cases, then drill them from realistic random-state scrambles. Every algorithm here is machine-verified against its case.</p>
+      <p class="page-sub">Open a case to learn its algorithm move by move in 3D, or select cases to drill with realistic scrambles.</p>
 
       <div class="sets">
         {#each methods as m}
@@ -163,14 +174,14 @@
                   {@const st = trainer.status(c.id)}
                   <div class="card" class:on={selected.has(c.id)}>
                     <button class="hit" onclick={() => trainer.toggle(set.id, c.id)} aria-pressed={selected.has(c.id)} aria-label="Select {c.name}">
-                      <div class="img">{@html caseSvg(caseState(c.algs[0]), set.view, colors, set.view === 'll-pll')}</div>
+                      <div class="img">{@html caseSvg(c.state, set.view, colors, set.view === 'll-pll')}</div>
                       <div class="meta">
                         <span class="name">{c.name}</span>
                         <span class="t num">{formatTime(trainer.mean(c.id), 2)}</span>
                       </div>
                       <div class="alg mono">{trainer.mainAlg(c)}</div>
                     </button>
-                    <button class="info icon-btn sm" onclick={() => show(c)} aria-label="Details for {c.name}"><Icon name="more" size={15} /></button>
+                    <button class="info icon-btn sm" onclick={() => show(c)} aria-label="Details for {c.name}" title="Case details and 3D lesson"><Icon name="more" size={15} /></button>
                     {#if st !== 'new'}<span class="st {st}" title={st}></span>{/if}
                   </div>
                 {/each}
@@ -183,14 +194,21 @@
         <p class="muted none">No {filter} cases in {set.name}. <button class="link" onclick={() => (filter = 'all')}>Show all</button></p>
       {/if}
     {:else if view === 'train'}
-      <TrainView {set} cases={selectedCases} mode={trainer.data.mode} onexit={() => (view = 'cases')} onopen={show} />
+      <TrainView
+        {set}
+        cases={focusedPractice ? [focusedPractice.c] : selectedCases}
+        mode={focusedPractice ? 'random' : trainer.data.mode}
+        practiceAlg={focusedPractice?.alg}
+        onexit={exitPractice}
+        onopen={show}
+      />
     {:else}
       <RecognizeView {set} cases={selectedCases} onexit={() => (view = 'cases')} />
     {/if}
   </div>
 </div>
 
-<CaseModal bind:open={modalOpen} {set} c={openCase} />
+<CaseModal bind:open={modalOpen} {set} c={openCase} onpractice={view === 'cases' ? practiceCase : undefined} />
 
 <style>
   .sets {

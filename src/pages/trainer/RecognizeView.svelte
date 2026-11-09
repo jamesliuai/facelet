@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import Icon from '../../components/Icon.svelte';
   import * as C from '../../lib/cube/cubie';
-  import { caseState, type TCase, type TSet } from '../../lib/trainer/sets';
+  import type { TCase, TSet } from '../../lib/trainer/sets';
   import { caseSvg, faceColors } from '../../lib/render/case-svg';
   import { settings } from '../../lib/store/settings.svelte';
   import { ui, typingInField } from '../../lib/store/ui.svelte';
@@ -28,7 +28,7 @@
     while (cases.length > 1 && c.id === current?.id);
     current = c;
     // view the case from a random angle
-    const s = caseState(c.algs[0]);
+    const s = c.state;
     shownState = set.view === 'f2l' ? s : C.multiply(s, C.applyMoves(C.solved(), Array(randInt(4)).fill(0)));
     const pool = set.cases.filter((x) => x.id !== c.id);
     const sameGroup = shuffle(pool.filter((x) => x.group === c.group));

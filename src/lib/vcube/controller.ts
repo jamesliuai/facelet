@@ -69,6 +69,7 @@ export class VirtualCube {
   colors: [number, number, number][] = [];
   stickerless = false;
   onTurn: (e: TurnEvent) => void = () => {};
+  onTurnSettled: (() => void) | undefined;
   private anim: { move: Move; start: number; dur: number } | null = null;
   private queue: Move[] = [];
   private raf = 0;
@@ -104,6 +105,14 @@ export class VirtualCube {
     this.request();
   }
 
+  setFacelets(facelets: Uint8Array) {
+    this.logic.setFacelets(facelets);
+    this.visual.setFacelets(facelets);
+    this.anim = null;
+    this.queue = [];
+    this.request();
+  }
+
   /** Apply an algorithm instantly (scrambles, replays). */
   applyInstant(alg: string) {
     this.finish();
@@ -125,6 +134,7 @@ export class VirtualCube {
     if (this.turnMs <= 0) {
       this.visual.apply(m);
       this.request();
+      this.onTurnSettled?.();
       return;
     }
     this.queue.push(m);
@@ -179,6 +189,7 @@ export class VirtualCube {
       this.anim = { move, start: t, dur };
     }
     let a = null as { move: Move; angle: number } | null;
+    let settled = false;
     if (this.anim) {
       const p = Math.min(1, (t - this.anim.start) / this.anim.dur);
       const qs = this.anim.move.q === 3 ? -1 : this.anim.move.q;
@@ -187,10 +198,12 @@ export class VirtualCube {
         this.visual.apply(this.anim.move);
         this.anim = null;
         a = null;
+        settled = true;
       }
     }
     this.renderer.draw(this.visual, a, this.view, this.colors, this.stickerless);
     if (this.anim || this.queue.length) this.request();
+    if (settled && !this.queue.length) this.onTurnSettled?.();
   }
 
   resize(w: number, h: number) {
@@ -200,11 +213,11 @@ export class VirtualCube {
 
   // ---------------------------------------------------------------- pointer
 
-  pointerDown(x: number, y: number) {
+  pointerDown(x: number, y: number, orbitOnly = false) {
     if (!this.enabled) return;
     // Picking only uses the cube's fixed geometry, so it is valid mid-animation:
     // a quick second drag must turn a layer, not orbit the camera.
-    const hit = this.renderer.pick(this.n, x, y);
+    const hit = orbitOnly ? null : this.renderer.pick(this.n, x, y);
     this.drag = { x, y, mode: hit ? 'turn' : 'orbit', hit, done: false, yaw: this.view.yaw, pitch: this.view.pitch };
   }
 

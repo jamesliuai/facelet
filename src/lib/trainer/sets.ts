@@ -1,18 +1,25 @@
-/** Trainer algorithm sets: curated (OLL, PLL, 2-look) and generated (F2L, COLL, ZBLL, CMLL). */
+/** Trainer cases and their recommended algorithms. */
 import * as C from '../cube/cubie';
 import { cubieFromAlg, StickerCube, toCubie } from '../cube/nxn';
 import { PLL, OLL, OLL2, PLL2, type RawCase } from './data/known';
-import generated from './data/generated.json';
+import community from './data/community.json';
 import type { Filler } from './setup';
 
 export type SetId = 'pll' | 'oll' | 'f2l' | 'oll2' | 'pll2' | 'coll' | 'zbls' | 'zbll' | 'cmll';
 export type View = 'll-oll' | 'll-pll' | 'll-full' | 'll-corners' | 'f2l' | 'zbls';
 
+interface AlgSource {
+  name: string;
+  url: string;
+}
+
 export interface TCase {
   id: string;
   name: string;
   group: string;
+  state: C.Cubie;
   algs: string[];
+  sources?: Record<string, AlgSource>;
 }
 
 export interface TSet {
@@ -30,20 +37,39 @@ export interface TSet {
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
 function fromRaw(prefix: string, raw: RawCase[]): TCase[] {
-  return raw.map((c) => ({ id: `${prefix}-${slug(c.name)}`, name: c.name, group: c.group, algs: c.algs }));
+  return raw.map((c) => ({ ...c, id: `${prefix}-${slug(c.name)}`, state: caseState(c.algs[0]) }));
 }
 
-/** Drop alternatives that are just the primary executed from another angle (R↔F relabel). */
-function tidy(algs: string[]): string[] {
-  const out: string[] = [];
-  const norm = (a: string) => a.replace(/F/g, 'R');
-  for (const a of algs) if (!out.some((b) => norm(b) === norm(a))) out.push(a);
-  return out;
+interface CommunityCase {
+  id: string;
+  name: string;
+  group: string;
+  sub?: number;
+  state: string;
+  algs: { moves: string; source: string }[];
 }
 
-const gen = generated as Record<string, { id: string; name: string; group: string; algs: string[]; sub?: number }[]>;
-const genCases = (k: string): TCase[] =>
-  (gen[k] ?? []).map((c) => ({ id: c.id, name: c.name, group: c.group + (k === 'zbll' && c.sub ? ` · ${c.sub}` : ''), algs: tidy(c.algs) }));
+export interface CommunityData {
+  sources: Record<string, AlgSource>;
+  sets: Record<'f2l' | 'zbls' | 'coll' | 'zbll' | 'cmll', CommunityCase[]>;
+}
+
+const catalog: CommunityData = community;
+
+function communityCases(set: keyof CommunityData['sets']): TCase[] {
+  return catalog.sets[set].map(({ id, name, group, sub, state, algs }) => {
+    const cubie = C.fromFacelets(Array.from(state, Number));
+    if (!cubie) throw new Error(`Invalid trainer case: ${id}`);
+    return {
+      id,
+      name,
+      group: set === 'zbll' && sub ? `${group} · ${sub}` : group,
+      state: cubie,
+      algs: algs.map(({ moves }) => moves),
+      sources: Object.fromEntries(algs.map(({ moves, source }) => [moves, catalog.sources[source]])),
+    };
+  });
+}
 
 const groupsOf = (cases: TCase[]) => [...new Set(cases.map((c) => c.group))];
 
@@ -52,29 +78,23 @@ function mk(s: Omit<TSet, 'groups'>): TSet {
 }
 
 export const SETS: TSet[] = [
-  mk({ id: 'f2l', name: 'F2L', short: 'F2L', method: 'CFOP', blurb: 'First two layers: every corner–edge pair case for the front-right slot.', view: 'f2l', filler: 'll', cases: genCases('f2l') }),
+  mk({ id: 'f2l', name: 'F2L', short: 'F2L', method: 'CFOP', blurb: 'First two layers: every corner–edge pair case for the front-right slot.', view: 'f2l', filler: 'll', cases: communityCases('f2l') }),
   mk({ id: 'oll', name: 'OLL', short: 'OLL', method: 'CFOP', blurb: 'Orient the last layer in one algorithm. 57 cases.', view: 'll-oll', filler: 'pll', cases: fromRaw('oll', OLL) }),
   mk({ id: 'pll', name: 'PLL', short: 'PLL', method: 'CFOP', blurb: 'Permute the last layer in one algorithm. 21 cases.', view: 'll-pll', filler: 'auf', cases: fromRaw('pll', PLL) }),
   mk({ id: 'oll2', name: '2-look OLL', short: '2LOOK OLL', method: 'CFOP', blurb: 'Beginner OLL: orient edges, then corners. 10 algorithms.', view: 'll-oll', filler: 'none', cases: fromRaw('oll2', OLL2) }),
   mk({ id: 'pll2', name: '2-look PLL', short: '2LOOK PLL', method: 'CFOP', blurb: 'Beginner PLL: corners, then edges. 6 algorithms.', view: 'll-pll', filler: 'none', cases: fromRaw('pll2', PLL2) }),
-  mk({ id: 'zbls', name: 'ZBLS', short: 'ZBLS', method: 'ZB', blurb: 'Insert the last F2L pair while orienting every last-layer edge, so ZBLL always follows.', view: 'zbls', filler: 'll-eo', cases: genCases('zbls') }),
-  mk({ id: 'coll', name: 'COLL', short: 'COLL', method: 'ZB', blurb: 'Corners of the last layer with edges oriented, leaving only an EPLL. 42 cases.', view: 'll-corners', filler: 'epll', cases: genCases('coll') }),
-  mk({ id: 'zbll', name: 'ZBLL', short: 'ZBLL', method: 'ZB', blurb: 'Solve any last layer with oriented edges in one algorithm. 472 cases in 7 sets.', view: 'll-full', filler: 'auf', cases: genCases('zbll') }),
-  mk({ id: 'cmll', name: 'CMLL', short: 'CMLL', method: 'Roux', blurb: 'Roux: solve the top corners without breaking the two blocks. 42 cases.', view: 'll-corners', filler: 'l6e', cases: genCases('cmll') }),
+  mk({ id: 'zbls', name: 'ZBLS', short: 'ZBLS', method: 'ZB', blurb: 'Insert the last F2L pair while orienting every last-layer edge, so ZBLL always follows.', view: 'zbls', filler: 'll-eo', cases: communityCases('zbls') }),
+  mk({ id: 'coll', name: 'COLL', short: 'COLL', method: 'ZB', blurb: 'Corners of the last layer with edges oriented, leaving only an EPLL. 42 cases.', view: 'll-corners', filler: 'epll', cases: communityCases('coll') }),
+  mk({ id: 'zbll', name: 'ZBLL', short: 'ZBLL', method: 'ZB', blurb: 'Solve any last layer with oriented edges in one algorithm. 472 cases in 7 sets.', view: 'll-full', filler: 'auf', cases: communityCases('zbll') }),
+  mk({ id: 'cmll', name: 'CMLL', short: 'CMLL', method: 'Roux', blurb: 'Roux: solve the top corners without breaking the two blocks. 42 cases.', view: 'll-corners', filler: 'l6e', cases: communityCases('cmll') }),
 ];
 
 export const setById = (id: string) => SETS.find((s) => s.id === id) ?? SETS[2];
 
-/** The state a case's main algorithm solves (centres normalised). */
-export function caseState(alg: string): C.Cubie {
+/** Derive the diagram for a hand-curated case from its original algorithm. */
+function caseState(alg: string): C.Cubie {
   const s = cubieFromAlg(alg);
   return s ? C.invert(s) : C.solved();
-}
-
-/** Sticker cube for drawing a case (inverse of the alg applied to solved). */
-export function caseStickers(alg: string): StickerCube {
-  const c = caseState(alg);
-  return new StickerCube(3, Uint8Array.from(C.toFacelets(c)));
 }
 
 const U = (k: number) => C.applyMoves(C.solved(), Array(((k % 4) + 4) % 4).fill(0));
@@ -153,11 +173,10 @@ export function withPreAuf(set: TSet, state: C.Cubie, alg: string): { auf: strin
 
 /** Filler for one case: 2-look sets mix case kinds, so pick by what the case leaves to do. */
 export function fillerFor(set: TSet, c: TCase): Filler {
-  if (set.id === 'oll2') return caseState(c.algs[0]).eo.some((x) => x) ? 'll-eo' : 'pll';
+  if (set.id === 'oll2') return c.state.eo.some((x) => x) ? 'll-eo' : 'pll';
   if (set.id === 'pll2') {
-    const st = caseState(c.algs[0]);
     const cornersDone = [0, 1, 2, 3].some((k) => {
-      const y = C.multiply(st, U(k));
+      const y = C.multiply(c.state, U(k));
       return [0, 1, 2, 3].every((i) => y.cp[i] === i);
     });
     return cornersDone ? 'auf' : 'epll';
