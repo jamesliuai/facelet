@@ -1,0 +1,27 @@
+{
+  "name": "facelet",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Facelet: a private, open, fast speedcubing suite. Timer, WCA scrambles, virtual cube and algorithm trainer.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run",
+    "gen:algs": "tsx scripts/gen-algs.ts",
+    "verify:algs": "vitest run tests/algs.test.ts"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@tsconfig/svelte": "^5.0.8",
+    "@types/node": "^22.20.5",
+    "svelte": "^5.57.3",
+    "svelte-check": "^4.7.8",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.5",
+    "vitest": "^5.1.0"
+  }
+}

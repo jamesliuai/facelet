@@ -1,0 +1,517 @@
+/* ------------------------------------------------------------------ fonts (self-hosted, OFL) */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('./assets/fonts/geist-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('./assets/fonts/geist-latin-ext-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('./assets/fonts/geist-mono-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('./assets/fonts/geist-mono-latin-ext-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('./assets/fonts/instrument-serif-latin-400-normal.woff2') format('woff2');
+}
+
+/* ------------------------------------------------------------------ tokens */
+/*
+ * Every neutral is mixed from two base colours, so palettes and custom colours
+ * only need a background and a foreground (set on <html> by lib/theme.ts).
+ * The ratios reproduce the original hand-tuned greys exactly for pure mono.
+ */
+:root {
+  --bg-base: #ffffff;
+  --fg-base: #0a0a0a;
+  /*
+   * Surfaces: the page is a soft canvas and panels float on it, lit from above.
+   * --bg is the surface colour (panels, cards, controls); --canvas sits behind.
+   */
+  --canvas: color-mix(in srgb, var(--fg-base) 3.4%, var(--bg-base));
+  --bg: var(--bg-base);
+  --fg: var(--fg-base);
+  --bg-2: color-mix(in srgb, var(--fg-base) 2%, var(--bg-base));
+  --bg-3: color-mix(in srgb, var(--fg-base) 4.5%, var(--bg-base));
+  --bg-hover: color-mix(in srgb, var(--fg-base) 5.3%, var(--bg-base));
+  --bg-press: color-mix(in srgb, var(--fg-base) 8.2%, var(--bg-base));
+  --line: color-mix(in srgb, var(--fg-base) 7.8%, var(--bg-base));
+  --line-2: color-mix(in srgb, var(--fg-base) 13.5%, var(--bg-base));
+  --line-3: color-mix(in srgb, var(--fg-base) 22%, var(--bg-base));
+  --fg-2: color-mix(in srgb, var(--fg-base) 75%, var(--bg-base));
+  --fg-3: color-mix(in srgb, var(--fg-base) 48%, var(--bg-base));
+  --fg-4: color-mix(in srgb, var(--fg-base) 29%, var(--bg-base));
+  --fg-5: color-mix(in srgb, var(--fg-base) 16.5%, var(--bg-base));
+  --inv-bg: var(--fg-base);
+  --inv-fg: var(--bg-base);
+  /* Accent defaults to the foreground: monochrome unless the user picks one. */
+  --accent: var(--fg-base);
+  --accent-fg: var(--bg-base);
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--bg-base));
+  --scrim: color-mix(in srgb, var(--canvas) 66%, transparent);
+  --glass: color-mix(in srgb, var(--bg) 82%, transparent);
+  --sticker-line: #1a1a1a;
+  /* Light from above: a hairline highlight on top, soft layered shadow below. */
+  --hi: inset 0 1px 0 rgb(255 255 255 / 0.7);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.035), 0 3px 10px -2px rgb(0 0 0 / 0.045), 0 16px 32px -16px rgb(0 0 0 / 0.08);
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.04), 0 6px 18px -4px rgb(0 0 0 / 0.08), 0 24px 48px -20px rgb(0 0 0 / 0.14);
+  --shadow-lg: 0 2px 6px rgb(0 0 0 / 0.04), 0 28px 80px rgb(0 0 0 / 0.16);
+  --r-sm: 8px;
+  --r: 12px;
+  --r-lg: 18px;
+  --r-xl: 22px;
+  --font: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --serif: 'Instrument Serif', 'New York', 'Iowan Old Style', Georgia, serif;
+  /* Page titles and the session name (Customize can switch this to the UI font). */
+  --display: var(--serif);
+  --system: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --glide: cubic-bezier(0.22, 1, 0.36, 1);
+  --topbar-h: 60px;
+  --sidebar-w: 304px;
+  --gap: 12px;
+  /* Timer state colours (lib/theme.ts swaps these for the classic / accent modes). */
+  --t-hold: var(--fg-4);
+  --t-ready: var(--fg);
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --bg-base: #0a0a0a;
+  --fg-base: #f5f5f5;
+  /* In the dark the canvas is the base colour and panels are lifted a step. */
+  --canvas: var(--bg-base);
+  --bg: color-mix(in srgb, var(--fg-base) 4%, var(--bg-base));
+  --bg-2: color-mix(in srgb, var(--fg-base) 6%, var(--bg-base));
+  --bg-3: color-mix(in srgb, var(--fg-base) 7.6%, var(--bg-base));
+  --bg-hover: color-mix(in srgb, var(--fg-base) 8.6%, var(--bg-base));
+  --bg-press: color-mix(in srgb, var(--fg-base) 12%, var(--bg-base));
+  --line: color-mix(in srgb, var(--fg-base) 10.5%, var(--bg-base));
+  --line-2: color-mix(in srgb, var(--fg-base) 15%, var(--bg-base));
+  --line-3: color-mix(in srgb, var(--fg-base) 22%, var(--bg-base));
+  --fg-2: color-mix(in srgb, var(--fg-base) 76%, var(--bg-base));
+  --fg-3: color-mix(in srgb, var(--fg-base) 49%, var(--bg-base));
+  --fg-4: color-mix(in srgb, var(--fg-base) 31.5%, var(--bg-base));
+  --fg-5: color-mix(in srgb, var(--fg-base) 17.4%, var(--bg-base));
+  --accent-soft: color-mix(in srgb, var(--accent) 18%, var(--bg-base));
+  --sticker-line: #000;
+  --hi: inset 0 1px 0 rgb(255 255 255 / 0.045);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 8px 24px -8px rgb(0 0 0 / 0.5);
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.5), 0 10px 30px -6px rgb(0 0 0 / 0.55), 0 30px 60px -24px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 2px 6px rgb(0 0 0 / 0.5), 0 28px 80px rgb(0 0 0 / 0.65);
+  color-scheme: dark;
+}
+
+:root[data-heading='sans'] {
+  --display: var(--font);
+}
+
+:root[data-timer-colors='classic'] {
+  --t-hold: #e5484d;
+  --t-ready: #22a35a;
+}
+:root[data-timer-colors='accent'] {
+  --t-ready: var(--accent);
+}
+
+/* ------------------------------------------------------------------ base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--canvas);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'ss01' on;
+}
+
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+#app {
+  height: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' on;
+}
+
+.mono {
+  font-family: var(--mono);
+}
+
+.muted {
+  color: var(--fg-3);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--line-2);
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ------------------------------------------------------------------ controls */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line-2);
+  background: var(--bg);
+  color: var(--fg);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  box-shadow: var(--hi), 0 1px 2px rgb(0 0 0 / 0.04);
+  transition: background 0.15s var(--ease), border-color 0.15s var(--ease), transform 0.14s var(--ease), color 0.15s, box-shadow 0.15s;
+  user-select: none;
+}
+.btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--line-3);
+}
+.btn:active {
+  transform: scale(0.97);
+  background: var(--bg-press);
+}
+.btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.btn.primary {
+  background-color: var(--accent);
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0));
+  color: var(--accent-fg);
+  border-color: transparent;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 1px 2px rgb(0 0 0 / 0.16), 0 6px 16px -8px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.btn.primary:hover {
+  background-color: color-mix(in srgb, var(--accent) 86%, var(--bg-base));
+}
+.btn.ghost {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+.btn.ghost:hover {
+  background: var(--bg-hover);
+}
+.btn.sm {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  border-radius: 8px;
+}
+.btn.lg {
+  height: 42px;
+  padding: 0 20px;
+  font-size: 14px;
+  border-radius: 12px;
+}
+.btn.danger:hover {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: var(--fg-2);
+  transition: background 0.15s var(--ease), color 0.15s, transform 0.14s var(--ease);
+  flex: none;
+}
+.icon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--fg);
+}
+.icon-btn:active {
+  background: var(--bg-press);
+  transform: scale(0.94);
+}
+.icon-btn.sm {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+}
+.icon-btn.active {
+  color: var(--fg);
+  background: var(--bg-3);
+}
+
+.input {
+  height: 34px;
+  padding: 0 11px;
+  border-radius: 10px;
+  border: 1px solid var(--line-2);
+  background: var(--bg);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.035);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+  min-width: 0;
+}
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.input::placeholder {
+  color: var(--fg-4);
+}
+textarea.input {
+  height: auto;
+  padding: 9px 11px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* A keycap: lit top edge, heavier bottom edge. */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid var(--line-2);
+  border-bottom-width: 2px;
+  background: var(--bg);
+  box-shadow: var(--hi);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--fg-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 99px;
+  border: 1px solid var(--line-2);
+  font-size: 12px;
+  color: var(--fg-2);
+  background: var(--bg);
+  white-space: nowrap;
+}
+.chip.solid {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+
+/* A floating panel: hairline edge, lit top, soft shadow. */
+.card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--hi), var(--shadow);
+}
+
+/* Instrument labels: small mono caps. */
+.label,
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+/* The eyebrow carries a single facelet, Facelet's mark. */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.eyebrow::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--accent);
+  flex: none;
+}
+
+.divider {
+  height: 1px;
+  background: var(--line);
+  border: 0;
+  margin: 0;
+}
+
+/* scrollable page containers */
+.page {
+  height: 100%;
+  overflow: auto;
+}
+.page-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 36px 32px 96px;
+  animation: page-in 0.5s var(--ease-out) both;
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.page-title {
+  font-family: var(--display);
+  font-size: 46px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.02;
+  margin: 12px 0 10px;
+}
+:root[data-heading='sans'] .page-title {
+  font-weight: 600;
+  font-size: 34px;
+  letter-spacing: -0.03em;
+}
+.page-sub {
+  color: var(--fg-3);
+  font-size: 14.5px;
+  margin: 0 0 32px;
+  max-width: 640px;
+  text-wrap: pretty;
+}
+
+@media (max-width: 720px) {
+  .page-inner {
+    padding: 22px 16px 104px;
+  }
+  .page-title {
+    font-size: 36px;
+  }
+  :root[data-heading='sans'] .page-title {
+    font-size: 27px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+:root[data-motion='reduce'] *,
+:root[data-motion='reduce'] *::before,
+:root[data-motion='reduce'] *::after {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+}

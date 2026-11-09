@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="description" content="Facelet: a private, open speedcubing timer with WCA random-state scrambles, statistics, a virtual cube and an algorithm trainer. Everything stays on your device." />
+    <meta name="theme-color" content="#f7f7f7" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <title>Facelet</title>
+    <script>
+      // Paint the saved colours before the app loads, so a custom theme never flashes.
+      try {
+        var r = document.documentElement;
+        var s = JSON.parse(localStorage.getItem('facelet.settings') || '{}');
+        var t = s.theme || 'light';
+        var dark = t === 'system' ? matchMedia('(prefers-color-scheme: dark)').matches : t === 'dark';
+        var c = JSON.parse(localStorage.getItem('facelet.theme') || 'null');
+        r.dataset.theme = dark ? 'dark' : 'light';
+        if (s.headingFont === 'sans') r.dataset.heading = 'sans';
+        if (c && c.dark === dark) {
+          r.style.setProperty('--bg-base', c.bg);
+          r.style.setProperty('--fg-base', c.fg);
+          if (c.accent) {
+            r.style.setProperty('--accent', c.accent);
+            r.style.setProperty('--accent-fg', c.accentFg);
+          }
+          // The page canvas: the background in the dark, a step towards the text in the light.
+          var canvas = c.bg;
+          if (!dark) {
+            canvas = '#';
+            for (var i = 1; i < 7; i += 2) {
+              var v = Math.round(parseInt(c.fg.slice(i, i + 2), 16) * 0.034 + parseInt(c.bg.slice(i, i + 2), 16) * 0.966);
+              canvas += (v < 16 ? '0' : '') + v.toString(16);
+            }
+          }
+          document.querySelector('meta[name=theme-color]').setAttribute('content', canvas);
+        }
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

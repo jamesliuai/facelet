@@ -1,0 +1,25 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+
+# Local credentials and environment overrides
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Editor, agent, and browser-session state
+.claude/
+.codex/
+.agents/
+.playwright/
+.playwright-cli/
+.vscode/
+.idea/
+
+# Test output (README screenshots in output/playwright are committed)
+coverage/
+playwright-report/
+test-results/
